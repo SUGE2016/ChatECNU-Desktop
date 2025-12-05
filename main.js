@@ -49,10 +49,14 @@ function createWindow() {
     event.preventDefault();
   });
 
+  // 允许的域名列表
+  const allowedDomains = ['https://chat.ecnu.edu.cn', 'https://sso.ecnu.edu.cn'];
+  const isAllowedUrl = (url) => allowedDomains.some(domain => url.startsWith(domain));
+
   // 禁止打开新窗口，改为在当前窗口导航或用系统浏览器打开
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    // 如果是同域名链接，在当前窗口打开
-    if (url.startsWith('https://chat.ecnu.edu.cn')) {
+    // 如果是允许的域名，在当前窗口打开
+    if (isAllowedUrl(url)) {
       mainWindow.loadURL(url);
     } else {
       // 外部链接用系统浏览器打开
@@ -60,6 +64,14 @@ function createWindow() {
     }
     // 阻止创建新窗口
     return { action: 'deny' };
+  });
+
+  // 拦截域外链接跳转（包括302重定向等），用系统浏览器打开
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (!isAllowedUrl(url)) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
   });
 
   // 加载目标网站
@@ -89,8 +101,23 @@ ipcMain.handle('show-save-dialog', async (event, defaultName) => {
   return result.filePath; // 用户取消时返回 undefined
 });
 
-// Electron 初始化完成并准备创建浏览器窗口时调用
-app.whenReady().then(() => {
+// 单实例锁：禁止多开
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  // 当第二个实例启动时，唤起已存在的窗口
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+
+  // Electron 初始化完成并准备创建浏览器窗口时调用
+  app.whenReady().then(() => {
   createWindow();
 
   // 创建系统托盘（Windows 会根据 DPI 自动选择合适的图标尺寸）
@@ -157,9 +184,10 @@ app.whenReady().then(() => {
   }
 });
 
-// 当所有窗口关闭时不退出，保持应用在后台运行（通过系统托盘）
-app.on('window-all-closed', () => {
-  // 不自动退出，让应用在后台运行以保持会话
-  // 用户可以通过托盘菜单的"退出"选项来真正退出应用
-});
+  // 当所有窗口关闭时不退出，保持应用在后台运行（通过系统托盘）
+  app.on('window-all-closed', () => {
+    // 不自动退出，让应用在后台运行以保持会话
+    // 用户可以通过托盘菜单的"退出"选项来真正退出应用
+  });
+}
 

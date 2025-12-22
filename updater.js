@@ -54,6 +54,7 @@ function initUpdater(win) {
         if (mainWindow) {
           mainWindow.webContents.send('update-message', '已取消下载');
         }
+        isCheckingManually = false;
       }
     });
   });
@@ -107,6 +108,12 @@ function initUpdater(win) {
       cancelId: 1
     }).then(({ response }) => {
       if (response === 0) {
+        // 关键修复：移除所有阻止窗口关闭的监听器（如 close 事件拦截）
+        // 确保 app.quit() 不会被窗口拦截而取消，导致安装程序检测到进程未退出
+        if (mainWindow) {
+          mainWindow.removeAllListeners('close');
+          mainWindow.close();
+        }
         autoUpdater.quitAndInstall();
       }
     });
@@ -124,18 +131,31 @@ function initUpdater(win) {
 
     // 仅在手动检查时提示错误，避免自动检查打扰用户
     if (isCheckingManually) {
-      let message = '无法连接到更新服务器';
-      if (err.message.includes('Github')) {
-        message = '无法从 GitHub 获取版本信息';
-      } else if (err.message.includes('net::ERR_INTERNET_DISCONNECTED')) {
+      // 提取错误信息
+      const errStr = err.message || err.toString();
+      let message = '检查更新时遇到问题';
+      let detail = errStr;
+      
+      // 友好化常见错误
+      if (errStr.includes('Github')) {
+        message = '无法连接到 GitHub';
+        detail = '无法获取版本信息，请检查网络连接。\n错误信息: ' + errStr;
+      } else if (errStr.includes('net::ERR_INTERNET_DISCONNECTED')) {
         message = '网络连接已断开';
+        detail = '请检查您的网络连接是否正常。';
+      } else if (errStr.includes('timeout')) {
+        message = '连接超时';
+        detail = '连接更新服务器超时，请稍后重试。';
+      } else if (errStr.includes('404')) {
+        message = '未找到版本信息';
+        detail = '服务器上没有找到更新配置文件。';
       }
 
       dialog.showMessageBox(mainWindow, {
         type: 'warning',
         title: '检查更新失败',
-        message: '检查更新时出错',
-        detail: `${message}\n\n如果您确信网络正常，这可能是服务器暂时不可用。`,
+        message: message,
+        detail: detail,
         buttons: ['确定'],
         noLink: true
       });
@@ -167,6 +187,16 @@ function checkForUpdates(manual = false) {
     console.error('[Updater] 检查更新失败:', err);
     if (manual && mainWindow) {
        mainWindow.webContents.send('update-message', '检查失败');
+       
+       dialog.showMessageBox(mainWindow, {
+        type: 'warning',
+        title: '检查更新失败',
+        message: '无法启动更新检查',
+        detail: err.message || err.toString(),
+        buttons: ['确定']
+      });
+      
+      isCheckingManually = false;
     }
   });
 }

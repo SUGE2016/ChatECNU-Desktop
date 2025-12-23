@@ -19,6 +19,9 @@ function initUpdater(win) {
   // 检查更新时
   autoUpdater.on('checking-for-update', () => {
     console.log('[Updater] 正在检查更新...');
+    if (mainWindow) {
+      mainWindow.webContents.send('checking-for-update');
+    }
   });
 
   // 发现新版本

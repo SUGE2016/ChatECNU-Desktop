@@ -78,6 +78,11 @@ function checkForUpdates() {
   if (isDownloading) return;
   console.log('[Updater] 触发检查更新');
 
+  // 手动通知前端进入检查状态，确保 UI 立即响应
+  if (mainWindow) {
+    mainWindow.webContents.send('checking-for-update');
+  }
+
   // 设置 15 秒超时
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => {

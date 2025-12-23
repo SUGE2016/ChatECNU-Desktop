@@ -38,7 +38,7 @@ function createWindow() {
     titleBarOverlay: {
       color: '#1a1a2e', // 标题栏背景色
       symbolColor: '#ffffff', // 控制按钮图标颜色
-      height: 38 // 与 index.html 中的标题栏高度一致
+      height: 40 // 强制高度，确保与前端 CSS 完全一致
     },
     icon: iconPath,
     title: APP_TITLE,
@@ -77,17 +77,19 @@ function createWindow() {
   
   mainWindow.setBrowserView(view);
   
-  // 设置 BrowserView 布局（避开标题栏高度 38px）
+  // 当前标题栏高度（默认为 40，后续由前端动态更新）
+  let currentTitlebarHeight = 41;
+
+  // 设置 BrowserView 布局
   const updateViewBounds = () => {
+    if (!mainWindow || !view) return;
     const bounds = mainWindow.getBounds();
-    // 注意：BrowserView 的 bounds 是相对于窗口内容区域的
-    // Windows 上无边框窗口的内容区域就是整个窗口
     const contentBounds = mainWindow.getContentBounds();
     view.setBounds({ 
       x: 0, 
-      y: 38, // 标题栏高度
+      y: currentTitlebarHeight, // 动态高度
       width: contentBounds.width, 
-      height: contentBounds.height - 38 
+      height: contentBounds.height - currentTitlebarHeight 
     });
   };
 

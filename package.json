@@ -1,6 +1,6 @@
 {
   "name": "chatecnu-desktop-app",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "description": "Desktop Application for chat.ecnu.edu.cn",
   "main": "main.js",
   "scripts": {

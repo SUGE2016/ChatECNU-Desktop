@@ -19,7 +19,10 @@
     "desktop",
     "chat"
   ],
-  "author": "ChatECNU Team @ ECNU",
+  "author": {
+    "name": "ChatECNU Team",
+    "email": "20180208@ecnu.edu.cn"
+  },
   "license": "ECNU",
   "repository": {
     "type": "git",

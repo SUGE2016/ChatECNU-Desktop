@@ -102,7 +102,7 @@
         }
       ],
       "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "icon": "build/icon.png",
+      "icon": "build/icons",
       "category": "Utility"
     },
     "nsis": {

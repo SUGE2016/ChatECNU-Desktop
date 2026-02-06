@@ -6,6 +6,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
+    "dev:uat": "electron . --uat",
     "build": "dotenv -- electron-builder",
     "build:win": "dotenv -- electron-builder --win && node post-build.js win",
     "build:mac": "dotenv -- electron-builder --mac && node post-build.js mac",

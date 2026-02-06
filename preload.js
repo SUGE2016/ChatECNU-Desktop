@@ -25,5 +25,16 @@ contextBridge.exposeInMainWorld('_tx', {
       listeners.set(event, []);
     }
     listeners.get(event).push(callback);
+  },
+
+  // 移除事件监听（防止内存泄漏）
+  off: (event, callback) => {
+    const callbacks = listeners.get(event);
+    if (callbacks) {
+      const index = callbacks.indexOf(callback);
+      if (index > -1) {
+        callbacks.splice(index, 1);
+      }
+    }
   }
 });

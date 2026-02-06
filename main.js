@@ -237,9 +237,9 @@ function compareVersions(a, b) {
 // 检查 web 版本更新
 async function checkWebVersionUpdate(reportedVersion) {
   try {
-    // 根据当前环境确定 API 地址
-    const isUatActive = store.get('uatActive') && store.get('uatMode');
-    const baseUrl = (forceUat || isUatActive) ? URL_UAT : URL_PRODUCTION;
+    // 根据当前环境确定 API 地址（与 createWindow 逻辑保持一致）
+    const shouldUseUat = forceUat || (store.get('uatMode') && store.get('uatActive'));
+    const baseUrl = shouldUseUat ? URL_UAT : URL_PRODUCTION;
     const url = `${baseUrl}/api/version/latest?_t=${Date.now()}`;
     
     const response = await fetch(url);
